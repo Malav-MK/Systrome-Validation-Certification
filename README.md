@@ -78,4 +78,4 @@ Additionally, rate-limit `qrcode_generate` server-side.
 
 ## Credit
 
-Discovered by `[Nishi Mehta](https://www.linkedin.com/in/nishi-mehta-812194248/)`
+Discovered by [Nishi Mehta](https://www.linkedin.com/in/nishi-mehta-812194248/)
