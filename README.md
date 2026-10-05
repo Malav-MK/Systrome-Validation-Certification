@@ -1,5 +1,5 @@
 # Systrome-Validation-Certification
-# Security Advisory: Unvalidated `t` Parameter Causes Client-Side Resource Consumption in Systrome Validation & Certification
+## Security Advisory: Unvalidated `t` Parameter Causes Client-Side Resource Consumption in Systrome Validation & Certification
 
 ## Summary
 
